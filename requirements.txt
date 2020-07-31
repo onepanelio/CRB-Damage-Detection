@@ -1,0 +1,7 @@
+opencv-python
+ffmpeg-python
+geojson
+pandas
+sqlalchemy
+pandas
+pymysql
