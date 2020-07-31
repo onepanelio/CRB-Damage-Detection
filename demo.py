@@ -15,6 +15,7 @@ import sys
 sys.path.append(os.environ.get('AUTO_SEGMENTATION_PATH')) 
 from mrcnn.config import Config
 import mrcnn.model as modellib
+import time
 import skimage.io
 from collections import OrderedDict
 from skimage.measure import find_contours, approximate_polygon
@@ -291,6 +292,8 @@ if __name__ == "__main__":
         raise ValueError('Invalid type: {}. Valid options are "both","classes","v_shape".'.format(args.type))
     # if not os.path.exists(args.video):
     #     raise FileExistsError("Video does not exist!")
+    start_time = time.time()
     output_xml_path, num_frames_ = main(args)
+    print("Time took to run inference: {}".format(time.time() - start_time))
     if args.dump_sql == "true":
         dump_to_sql(output_xml_path, "/mnt/data/datasets/gps.csv", os.path.basename(args.video), args.skip_no, args.write_into_objects, args.drop_extra_clm, num_frames_)
