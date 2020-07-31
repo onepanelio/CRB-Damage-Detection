@@ -1,8 +1,8 @@
 import os
-import tensorflow as tf
+# import tensorflow as tf
 # uncomment following lines if you are using TF2
-# import tensorflow.compat.v1 as tf
-# tf.disable_v2_behavior() 
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior() 
 import numpy as np
 import json
 import ast
@@ -169,7 +169,7 @@ def main(args):
     elif args.type == "v_shape":
         seg_model = Segmentation(args.mask_model)
        
-    cap = cv2.VideoCapture("/mnt/data/datasets/temp.mp4")
+    cap = cv2.VideoCapture(args.video)
     #would be better to take csv files as an input
     #labels_mapping_od = {1:'dead', 2:'damaged',3:'healthy'}
     labels_mapping_od = {1:'zero',2:'light',3:'medium',4:'high',5:'non_recoverable'}
@@ -181,14 +181,14 @@ def main(args):
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     if args.num_frames == 'None' or args.num_frames == None:
         args.num_frames = num_frames
-    out = cv2.VideoWriter(os.path.join("/mnt/output/", os.path.basename(args.video)[:-4]+"_skip_{}_numframes_{}.mp4".format(args.skip_no, args.num_frames)), fourcc, fps, (frame_width,frame_height))
+    out = cv2.VideoWriter(os.path.basename(args.video)[:-4]+"_skip_{}_numframes_{}.mp4".format(args.skip_no, args.num_frames), fourcc, fps, (frame_width,frame_height))
    
     
     labels_from_csv = get_labels(args.classes_cvat, args.classes_type)
     print("Labels: ", labels_from_csv)
     final_result = {'meta':{'task': OrderedDict([('id',str(args.task_id)),('name',str(args.task_name)),('size',str(num_frames)),('mode','interpolation'),('start_frame', str(0)),('stop_frame', str(num_frames-1)),('z_order',"False"),('labels', labels_from_csv)])}, 'frames':[]}
     
-    output_xml_path = "/mnt/output/cvat_annotation_"+os.path.basename(args.video)[:-4]+"_skip_{}_numframes_{}.xml".format(args.skip_no, args.num_frames)
+    output_xml_path = "cvat_annotation_"+os.path.basename(args.video)[:-4]+"_skip_{}_numframes_{}.xml".format(args.skip_no, args.num_frames)
     while True:
         ret, frame = cap.read()
         if ret:
@@ -268,29 +268,29 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--type",default="both",help="what type of models to use [both,classes,v_shape]")
-    parser.add_argument("--video", default="/mnt/data/datasets/temp.mp4", help="path to video")
+    parser.add_argument("--video", default="/home/savan/Downloads/20200703_124043.mp4", help="path to video")
     parser.add_argument("--gps_csv", default="/home/savan/Downloads/20200703_124043_gps.csv", help="path to csv containing gps data")
     parser.add_argument("--skip_no", default=7, type=int, help="num of frames to skip")
     parser.add_argument("--num_frames", default=None, help="how many frames to consider?")
-    parser.add_argument("--od_model", default="/mnt/data/od-models/frozen_inference_graph.pb" , help="path to trained detection model")
-    parser.add_argument("--classes_cvat", default="/mnt/data/datasets/classes.csv", help="classes you want to use for cvat, see readme for more details.")
+    parser.add_argument("--od_model", default="/home/savan/Downloads/frozen_inference_graph_5classes.pb" , help="path to trained detection model")
+    parser.add_argument("--classes_cvat", default="/home/savan/Downloads/5classes.csv", help="classes you want to use for cvat, see readme for more details.")
     parser.add_argument("--classes_type", default="od", help="type of classes csv file [od, maskrcnn]")
-    parser.add_argument("--mask_model", default="/mnt/data/mask-models/mask_rcnn_cvat.h5", help="path to trained maskrcnn model")
+    parser.add_argument("--mask_model", default="/home/savan/Downloads/mask_rcnn_cvat_0160.h5", help="path to trained maskrcnn model")
     parser.add_argument("--od_threshold",type=float, default=0.5, help="threshold for IoU")
     parser.add_argument("--mask_threshold",type=float, default=0.5, help="threshold for maskrcnn")
-    parser.add_argument("--output_video", default="/mnt/output/output.mp4", help="where to store output video")
+    parser.add_argument("--output_video", default="output.mp4", help="where to store output video")
     parser.add_argument("--survey_type", default="v_shape",help="what to write in geojson [v_shape,classes")
     parser.add_argument("--task_id", default=0, type=int, help="required only if you want to use this in cvat")
     parser.add_argument("--task_name", default="demo", help="requierd only if you want to use this in cvat")
     parser.add_argument("--write_into_objects", default=True, help="should this enter detected objects into objects table?")
     parser.add_argument("--drop_extra_clm", default=True, help="whether it should drop extra columns? required if dumping into objects table")
     # have to use string as we cant have condition statements in workflow
-    parser.add_argument('--dump_sql', default='true')
+    parser.add_argument('--dump_sql', default=True)
     args = parser.parse_args()
     if args.type not in ['both','classes','v_shape']:
         raise ValueError('Invalid type: {}. Valid options are "both","classes","v_shape".'.format(args.type))
     # if not os.path.exists(args.video):
     #     raise FileExistsError("Video does not exist!")
     output_xml_path, num_frames_ = main(args)
-    if args.dump_sql == "true":
-        dump_to_sql(output_xml_path, "/mnt/data/datasets/gps.csv", os.path.basename(args.video), args.skip_no, args.write_into_objects, args.drop_extra_clm, num_frames_)
+    if args.dump_sql == True or args.dump_sql == 'True':
+        dump_to_sql(output_xml_path, args.gps_csv, os.path.basename(args.video), args.skip_no, args.write_into_objects, args.drop_extra_clm, num_frames_)

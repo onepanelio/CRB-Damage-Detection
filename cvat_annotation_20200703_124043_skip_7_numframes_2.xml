@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <task>
+      <id>0</id>
+      <name>demo</name>
+      <size>21400</size>
+      <mode>interpolation</mode>
+      <start_frame>0</start_frame>
+      <stop_frame>21399</stop_frame>
+      <z_order>False</z_order>
+      <labels>
+        <label>
+          <name>zero</name>
+        </label>
+        <label>
+          <name>light</name>
+        </label>
+        <label>
+          <name>medium</name>
+        </label>
+        <label>
+          <name>high</name>
+        </label>
+        <label>
+          <name>non_recoverable</name>
+        </label>
+      </labels>
+    </task>
+  </meta>
+  <image id="0" name="frame_000000" width="3840" height="2160">
+    <box label="light" occluded="0" xtl="1503.00" ytl="1042.00" xbr="1669.00" ybr="1248.00">
+    </box>
+    <box label="light" occluded="0" xtl="1282.00" ytl="988.00" xbr="1459.00" ybr="1251.00">
+    </box>
+    <box label="medium" occluded="0" xtl="1407.00" ytl="1014.00" xbr="1567.00" ybr="1253.00">
+    </box>
+  </image>
+  <image id="7" name="frame_000007" width="3840" height="2160">
+    <box label="light" occluded="0" xtl="1335.00" ytl="964.00" xbr="1541.00" ybr="1274.00">
+    </box>
+    <box label="light" occluded="0" xtl="1586.00" ytl="1023.00" xbr="1742.00" ybr="1244.00">
+    </box>
+    <box label="medium" occluded="0" xtl="1508.00" ytl="990.00" xbr="1647.00" ybr="1249.00">
+    </box>
+  </image>
+</annotations>
