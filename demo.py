@@ -196,6 +196,7 @@ def main(args):
             if frame_no % args.skip_no != 0:
                 frame_no += 1
                 continue
+            s_d = time.time()
             print("Processing frame: ", frame_no)
             # get image ready for inference
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -220,6 +221,8 @@ def main(args):
                         for box in boxes:
                             shapes.append({'type':'rectangle','label':label,'occluded':0,'points':box})
                     final_result['frames'].append({'frame':frame_no, 'width':frame_width, 'height':frame_height, 'shapes':shapes})
+            s_m = time.time()
+            print("Time for Object Detection Inferece: {}".format(s_m - s_d))
             if args.type == "both" or args.type == "v_shape":
                 # run segmentation
                 result = seg_model.get_polygons([image_mask_rcnn], args.mask_threshold)
@@ -241,7 +244,7 @@ def main(args):
                         final_result['frames']['shapes'].extend(shapes)
                     else:
                         final_result['frames'].append({'frame':frame_no, 'width':frame_width, 'height':frame_height, 'shapes':shapes})            
-
+            print("Time for MaskRCNN Inference: {}".format(time.time() - s_m))
             frame = draw_instances(frame, od_result, result)
             #write video
             out.write(frame)
