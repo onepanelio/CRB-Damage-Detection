@@ -213,7 +213,7 @@ def main(args):
             result = {}
             if args.type == "both" or args.type == "classes":
                 # run detection
-                tmep_1 = time.time()
+                temp_1 = time.time()
                 boxes, scores, classes, num_detections = od_model.get_detections(image_np_expanded)
                 print("Time took to get od results {}".format(time.time() - temp_1))
                 #normalize bounding boxes, also apply threshold
