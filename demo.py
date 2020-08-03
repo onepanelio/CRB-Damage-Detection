@@ -208,7 +208,7 @@ def main(args):
             if width > 1920 or height > 1080:
                 image = image_org.resize((width // 2, height // 2), Image.ANTIALIAS)
             t_load = time.time()
-            image_np = load_image_into_numpy(image)
+            image_np = np.array(image)
             print("Time took to load first image {}".format(time.time() - t_load))
             print(image_np.shape)
             image_mask_rcnn = np.array(image_org)
@@ -216,7 +216,9 @@ def main(args):
             print("Time took to load sec image {}".format(time.time() - t_load))
             image_np_expanded = np.expand_dims(image_np, axis=0)
             print("Time took to process image {}".format(time.time() - temp4))
-            print("Total time for loading {}".format(time.time() - t_load))
+            print("Total time for loading {}".format(time.time(
+
+            ) - t_load))
             od_result = {}
             result = {}
             s_d = time.time()
