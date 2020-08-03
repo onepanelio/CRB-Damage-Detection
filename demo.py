@@ -41,7 +41,9 @@ class ObjectDetection:
         scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
         classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
         num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
+        p = time.time()
         (boxes, scores, classes, num_detections) = self.sess.run([boxes, scores, classes, num_detections], feed_dict={image_tensor: image_np_expanded})
+        print("Time took to run actual inference {}".format(time.time() - p))
         return boxes, scores, classes, num_detections
 
     @staticmethod
@@ -211,7 +213,9 @@ def main(args):
             result = {}
             if args.type == "both" or args.type == "classes":
                 # run detection
+                tmep_1 = time.time()
                 boxes, scores, classes, num_detections = od_model.get_detections(image_np_expanded)
+                print("Time took to get od results {}".format(time.time() - temp_1))
                 #normalize bounding boxes, also apply threshold
                 od_result = ObjectDetection.process_boxes(boxes, scores, classes, labels_mapping_od, args.od_threshold, width, height)
                 if od_result:
