@@ -204,12 +204,17 @@ def main(args):
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image_org = Image.fromarray(img)
             width, height = image_org.size
+            print("Init {}".format(time.time() - temp4))
             if width > 1920 or height > 1080:
                 image = image_org.resize((width // 2, height // 2), Image.ANTIALIAS)
+            t_load = time.time()
             image_np = load_image_into_numpy(image)
+            print("Time took to load first image {}".format(time.time() - t_load))
             image_mask_rcnn = load_image_into_numpy(image_org)
+            print("Time took to load sec image {}".format(time.time() - t_load))
             image_np_expanded = np.expand_dims(image_np, axis=0)
             print("Time took to process image {}".format(time.time() - temp4))
+            print("Total time for loading {}".format(time.time() - t_load))
             od_result = {}
             result = {}
             s_d = time.time()
