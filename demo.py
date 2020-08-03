@@ -198,7 +198,7 @@ def main(args):
             if frame_no % args.skip_no != 0:
                 frame_no += 1
                 continue
-            s_d = time.time()
+            temp4 = time.time()
             print("Processing frame: ", frame_no)
             # get image ready for inference
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -209,14 +209,17 @@ def main(args):
             image_np = load_image_into_numpy(image)
             image_mask_rcnn = load_image_into_numpy(image_org)
             image_np_expanded = np.expand_dims(image_np, axis=0)
+            print("Time took to process image {}".format(time.time() - temp4))
             od_result = {}
             result = {}
+            s_d = time.time()
             if args.type == "both" or args.type == "classes":
                 # run detection
                 temp_1 = time.time()
                 boxes, scores, classes, num_detections = od_model.get_detections(image_np_expanded)
                 print("Time took to get od results {}".format(time.time() - temp_1))
                 #normalize bounding boxes, also apply threshold
+                temp_5 = time.time()
                 od_result = ObjectDetection.process_boxes(boxes, scores, classes, labels_mapping_od, args.od_threshold, width, height)
                 if od_result:
                     print("od", od_result)
@@ -225,6 +228,7 @@ def main(args):
                         for box in boxes:
                             shapes.append({'type':'rectangle','label':label,'occluded':0,'points':box})
                     final_result['frames'].append({'frame':frame_no, 'width':frame_width, 'height':frame_height, 'shapes':shapes})
+                print("Time for processing boxes {}".format(time.time() - temp_5))
             s_m = time.time()
             print("Time for Object Detection Inferece: {}".format(s_m - s_d))
             if args.type == "both" or args.type == "v_shape":
