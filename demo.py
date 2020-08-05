@@ -41,9 +41,7 @@ class ObjectDetection:
         scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
         classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
         num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
-        p = time.time()
         (boxes, scores, classes, num_detections) = self.sess.run([boxes, scores, classes, num_detections], feed_dict={image_tensor: image_np_expanded})
-        print("Time took to run actual inference {}".format(time.time() - p))
         return boxes, scores, classes, num_detections
 
     @staticmethod
@@ -198,48 +196,32 @@ def main(args):
             if frame_no % args.skip_no != 0:
                 frame_no += 1
                 continue
-            temp4 = time.time()
             print("Processing frame: ", frame_no)
             # get image ready for inference
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image_org = Image.fromarray(img)
             width, height = image_org.size
-            print("Init {}".format(time.time() - temp4))
             if width > 1920 or height > 1080:
                 image = image_org.resize((width // 2, height // 2), Image.ANTIALIAS)
-            t_load = time.time()
             image_np = np.array(image)
-            print("Time took to load first image {}".format(time.time() - t_load))
-            print(image_np.shape)
             image_mask_rcnn = np.array(image_org)
-            print(image_mask_rcnn.shape)
-            print("Time took to load sec image {}".format(time.time() - t_load))
             image_np_expanded = np.expand_dims(image_np, axis=0)
-            print("Time took to process image {}".format(time.time() - temp4))
-            print("Total time for loading {}".format(time.time(
-
-            ) - t_load))
+           
             od_result = {}
             result = {}
-            s_d = time.time()
             if args.type == "both" or args.type == "classes":
                 # run detection
-                temp_1 = time.time()
                 boxes, scores, classes, num_detections = od_model.get_detections(image_np_expanded)
-                print("Time took to get od results {}".format(time.time() - temp_1))
                 #normalize bounding boxes, also apply threshold
-                temp_5 = time.time()
                 od_result = ObjectDetection.process_boxes(boxes, scores, classes, labels_mapping_od, args.od_threshold, width, height)
                 if od_result:
-                    print("od", od_result)
+                    print("Object Detection:", od_result)
                     shapes = []
                     for label, boxes in od_result.items():
                         for box in boxes:
                             shapes.append({'type':'rectangle','label':label,'occluded':0,'points':box})
                     final_result['frames'].append({'frame':frame_no, 'width':frame_width, 'height':frame_height, 'shapes':shapes})
-                print("Time for processing boxes {}".format(time.time() - temp_5))
-            s_m = time.time()
-            print("Time for Object Detection Inferece: {}".format(s_m - s_d))
+            
             if args.type == "both" or args.type == "v_shape":
                 # run segmentation
                 result = seg_model.get_polygons([image_mask_rcnn], args.mask_threshold)
@@ -261,7 +243,6 @@ def main(args):
                         final_result['frames']['shapes'].extend(shapes)
                     else:
                         final_result['frames'].append({'frame':frame_no, 'width':frame_width, 'height':frame_height, 'shapes':shapes})            
-            print("Time for MaskRCNN Inference: {}".format(time.time() - s_m))
             frame = draw_instances(frame, od_result, result)
             #write video
             out.write(frame)
