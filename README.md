@@ -39,6 +39,8 @@ Notes:
 
 **Executing workflow using Python SDK**
 
+You can install Onepanel SDK as follows: `pip3 install onepanel-sdk==0.12.0b2`.
+
 You can execute Onepanel workflows using Onepanel's Python SDK. You can find sample script `workflow_execution.py` which shows how to execute workflow. This requires `ONEPANEL_AUTHORIZATION` envrionment variable. You can also directly use string (line #8) but that isn't recommended if you will be sharing this script with others. You can set that environment variable by editing `.bashrc` file as follows.
 
 1 - `sudo ~/.bashrc`
