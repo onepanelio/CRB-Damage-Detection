@@ -64,7 +64,7 @@ def create_csv(xml_file, gps_csv, video_file, out_path, skip_no, drop_extra):
 def dump_to_sql(xml_file, gps_csv, video_file, skip_no, write_into_objects, drop_extra, num_frames):
     user = os.getenv('CRB_SQL_USERNAME')
     password = os.getenv('CRB_SQL_PASSWORD')
-    table = os.getenv('CRB_SQL_TABLE')
+    table = os.path.basename(video_file)[:-4]+'_skip_{}_numframes_{}'.format(skip_no, num_frames)
     csv_file = os.path.basename(video_file)[:-4]+'_skip_{}_numframes_{}.csv'.format(skip_no, num_frames)
     print("Generating CSV file to create SQL database...")
     if not create_csv(xml_file, gps_csv, video_file, csv_file, skip_no, drop_extra):
