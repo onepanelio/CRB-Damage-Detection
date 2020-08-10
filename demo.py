@@ -171,6 +171,8 @@ def main(args):
     elif args.type == "v_shape":
         seg_model = Segmentation(args.mask_model)
        
+    print("File Exists: ", os.path.exists("/mnt/data/datasets/temp.mp4"))
+    print("File Size: ", os.path.getsize("/mnt/data/datasets/temp.mp4"))
     cap = cv2.VideoCapture("/mnt/data/datasets/temp.mp4")
     #would be better to take csv files as an input
     #labels_mapping_od = {1:'dead', 2:'damaged',3:'healthy'}
