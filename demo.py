@@ -88,6 +88,7 @@ class Segmentation:
                     if r['scores'][index] >= threshold:
                         mask = r['masks'][:,:,index].astype(np.uint8)
                         contours = find_contours(mask, 0.5)
+                        print('contours :', contours)
                         contour = contours[0]
                         contour = np.flip(contour, axis=1)
                         contour = approximate_polygon(contour, tolerance=2.5)
