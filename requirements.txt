@@ -1,4 +1,4 @@
-opencv-python
+opencv-python==4.3.0.36
 ffmpeg-python
 geojson
 pandas
