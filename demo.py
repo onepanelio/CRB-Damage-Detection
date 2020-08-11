@@ -78,7 +78,7 @@ class Segmentation:
         # Load weights trained on MS-COCO
         self.model.load_weights(model_path, by_name=True)
         self.labels_mapping = {0:'BG', 1:'cut'}
-        self.controur_count = 0 # count empty controus for debugging
+        self.contour_count = 0 # count empty controus for debugging
     
     def get_polygons(self, images, threshold):
         res = self.model.detect(images)
@@ -264,6 +264,7 @@ def main(args):
             try:
              
                 print("Final result: ", final_result)
+                print("Empty controus: ", seg_model.contour_count)
                 dump_as_cvat_annotation(open(output_xml_path, "w"), final_result)
                 cap.release()
                 out.release()
