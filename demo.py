@@ -78,6 +78,7 @@ class Segmentation:
         # Load weights trained on MS-COCO
         self.model.load_weights(model_path, by_name=True)
         self.labels_mapping = {0:'BG', 1:'cut'}
+        self.controur_count = 0 # count empty controus for debugging
     
     def get_polygons(self, images, threshold):
         res = self.model.detect(images)
@@ -88,6 +89,8 @@ class Segmentation:
                     if r['scores'][index] >= threshold:
                         mask = r['masks'][:,:,index].astype(np.uint8)
                         contours = find_contours(mask, 0.5)
+                        if not contours:
+                            continue
                         print('contours :', contours)
                         contour = contours[0]
                         contour = np.flip(contour, axis=1)
