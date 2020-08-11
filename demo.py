@@ -90,6 +90,7 @@ class Segmentation:
                         mask = r['masks'][:,:,index].astype(np.uint8)
                         contours = find_contours(mask, 0.5)
                         if not contours:
+                            self.contour_count += 1
                             continue
                         contour = contours[0]
                         contour = np.flip(contour, axis=1)
