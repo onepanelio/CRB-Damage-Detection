@@ -91,7 +91,6 @@ class Segmentation:
                         contours = find_contours(mask, 0.5)
                         if not contours:
                             continue
-                        print('contours :', contours)
                         contour = contours[0]
                         contour = np.flip(contour, axis=1)
                         contour = approximate_polygon(contour, tolerance=2.5)
