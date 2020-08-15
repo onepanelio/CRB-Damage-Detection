@@ -36,6 +36,9 @@ Notes:
 - You also need to provide a csv file `--classes_cvat`, if you are planning to use this XML file in CVAT. Since object detection and MaskRCNN model can have different classes, make sure you use file which has same classes as your CVAT task (where you are planning to upload this XML file).
 - This will work with tasks that were created for videos only. Since tasks with images will have different names. 
 
+**Downloading Trained Models:**
+Please create a folder named `data` in the root directory and put all three (model for 3 classes is optional) files in there.
+You can download all 4 files from S3: [Models](https://s3.console.aws.amazon.com/s3/buckets/cnas-re.uog.onepanel.io/inference_data/?region=us-west-2&tab=overview)
 
 **Executing workflow using Python SDK**
 
