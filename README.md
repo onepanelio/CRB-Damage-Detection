@@ -3,7 +3,7 @@
 `demo.py` runs inference on given input video and outputs video with bounding boxes/polygons drawn.
 
 **Install dependecies:**
-Works on linux system only.
+Below instructions were tested on Ubuntu 18.04 with cuda 10.1 installed.
 ```shell
 ./setup.sh
 ```
