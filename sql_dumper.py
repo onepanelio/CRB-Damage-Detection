@@ -8,81 +8,104 @@ from sqlalchemy import create_engine
 
 def str2int(s):
     return int(float(s))
-
-
-def create_csv(xml_file, gps_csv, video_file, out_path, skip_no, drop_extra):
-   
-    tree = ET.parse(xml_file)
-    root = tree.getroot()
-    damage_mapping = {'zero':0, 'light':1, 'medium':2, 'high':3, 'non_recoverable':4}
-    
-    gps = csv.reader(open(gps_csv).readlines())
-    p = {}
-    indexes = {'timestamp':1, 'lat':2, 'lon':3}
-    for d in gps:
-        if 'frame' in d:
-            indexes['timestamp'] = d.index('timestamp')
-            indexes['lat'] = d.index('lat')
-            indexes['lon'] = d.index('lon')
-        else:
-            if int(d[0]) % skip_no == 0:
-                p[d[0]] = {'timestamp':d[indexes['timestamp']], 'lat':d[indexes['lat']], 'lon':d[indexes['lon']]}
-
-
-    mylist = []
-    track_id = 0
-    for track in root.findall('image'):
-        for box in track.findall('box'):
-            mydict = box.attrib
-            mydict.update(track.attrib)
-            mydict.update({'damage':damage_mapping[box.attrib['label']]})
-            mydict.update({'video_file':video_file})
-            mydict.update(p[track.attrib['id']])
-            # add following two columns just to same structure as objects table
-            mydict.update({'keyframe': 1})
-            mydict.update({'track_id': track_id})
-            track_id += 1
-            mylist.append(mydict)
-
-    if mylist:
-        # objects are detected
-        df = pd.DataFrame(mylist)
-        if drop_extra or drop_extra == 'True':
-            df.drop(['width', 'height', 'occluded', 'name'], axis=1, inplace=True)
-        df = df.rename({'id':'frame'}, axis=1)
-        df = df[['frame','keyframe','xtl','ytl','xbr','ybr','track_id','label','timestamp','lat','lon','damage','video_file']]
-        df.xbr = df.xbr.apply(lambda x: str2int(x))
-        df.xtl = df.xtl.apply(lambda x: str2int(x))
-        df.ybr = df.ybr.apply(lambda x: str2int(x))
-        df.ytl = df.ytl.apply(lambda x: str2int(x))
-        df.frame = df.frame.apply(lambda x: str2int(x))
-        df.to_csv(out_path, index=False)
-        return True
-    
-    return False
+  
     
 def dump_to_sql(xml_file, gps_csv, video_file, skip_no, write_into_objects, drop_extra, num_frames):
     user = os.getenv('CRB_SQL_USERNAME')
     password = os.getenv('CRB_SQL_PASSWORD')
-    table = os.path.basename(video_file)[:-4]+'_skip_{}_numframes_{}'.format(skip_no, num_frames)
-    csv_file = os.path.basename(video_file)[:-4]+'_skip_{}_numframes_{}.csv'.format(skip_no, num_frames)
-    print("Generating CSV file to create SQL database...")
-    if not create_csv(xml_file, gps_csv, video_file, csv_file, skip_no, drop_extra):
-        sys.exit("Model could not detect any objects. Terminating the SQL dump process...")
 
-    engine = create_engine('mysql+pymysql://{}:{}@mysql.guaminsects.net/videosurvey'.format(user, password))
+    root = ET.parse(xml_file).getroot()
+    engine, connection = connect_to_db(user, password)
+    add_frames(root, engine, video_file, gps_csv, skip_no, num_frames)
+    add_trees(root,engine, video_file)
+    add_vcuts(root, engine, video_file)
 
-    try:
-        df = pd.read_csv(csv_file)
-        print("Making connection request to database...")
-        conn = engine.connect()
-        conn.execute('DROP TABLE IF EXISTS {};'.format(table))
-        df.to_sql(table, engine, index=False, if_exists="replace")
-        conn.execute('ALTER TABLE {} ADD coords POINT;'.format(table))
-        conn.execute('UPDATE {} SET coords=POINT(lon,lat);'.format(table))
-        if write_into_objects or write_into_objects == 'True': #write into objects table
-            conn.execute('INSERT INTO objects SELECT * FROM {};'.format(table))
-        print("Data inserted successfully!")
-        conn.close()
-    except RuntimeError as e:
-        print("An error occurr while writing to SQL table: ", e)
+def connect_to_db(username, password):
+    engine = create_engine(f'mysql+pymysql://{username}:{password}@mysql.guaminsects.net/videosurvey')
+    connection = engine.connect()
+    return engine, connection
+
+def add_frames(root, engine, video_id, gps_csv, skip_no, num_frames):
+    """
+    Extracts frame data from CVATXMLFILE and appends this to the frames table in the videosurvey MySQL database.
+    This code will fail if identical records already exist in the frames table or 
+    if the videos table does not contain corresponding video_ids.   
+    """
+    image_id_set = set()
+    for image in root.findall('image'):
+        image_id_set.add(int(image.attrib['id']))
+    mylist = sorted(list(image_id_set))
+    df = pd.DataFrame(mylist, columns=['frame'])
+    df['video_id'] = video_id
+    df['frame_id'] = df.frame.apply(lambda x: f'{video_id}-{x}')
+    # df = df.merge(pd.read_csv(gps_csv))
+    df_gps = pd.read_csv(gps_csv)
+    df_gps = df_gps.iloc[0:skip_no*num_frames-skip_no+2:skip_no]
+    df = df.merge(df_gps)
+    df = df[['frame_id','video_id','frame','timestamp','lat','lon']]
+    df.to_sql('frames', engine, index=False, if_exists='append')
+
+
+def add_trees(root, engine, video_id):
+    """
+    Extracts tree image data from CVATXMLFILE and appends this to the trees table in the videosurvey MySQL database.
+    This code will fail if identical records already exist in the trees table or 
+    if the frames table does not contain corresponding frame_ids.   
+    """
+    mylist = []
+    for image in root.findall('image'):
+        for box in image.findall('box'):
+            mydict = box.attrib
+            mydict.update(image.attrib)
+            mylist.append(mydict)
+    df = pd.DataFrame(mylist)
+    df = df[(df.occluded=='0')]
+    damagedict = {'zero':0, 'light':1, 'medium':2, 'high':3, 'non_recoverable':4}
+    df['damage'] = df.label.apply(lambda x: damagedict[x])
+    df['frame_id'] = df.id.apply(lambda x: f'{video_id}-{x}')
+    df.xbr = df.xbr.apply(lambda x: str2int(x))
+    df.xtl = df.xtl.apply(lambda x: str2int(x))
+    df.ybr = df.ybr.apply(lambda x: str2int(x))
+    df.ytl = df.ytl.apply(lambda x: str2int(x))
+    df = df[['frame_id', 'damage', 'xtl', 'ytl', 'xbr', 'ybr']]
+    df.to_sql('trees', engine, index=False, if_exists='append')
+
+def add_vcuts(root, engine, video_id):
+    """
+    Extracts vcut image data from CVATXMLFILE and appends this to the vcuts table in the videosurvey MySQL database.
+    This code will fail if identical records already exist in the vcuts table or 
+    if the frames table does not contain corresponding frame_ids.   
+    """
+    mylist = []
+    for image in root.findall('image'):
+        for poly in image.findall('polygon'):
+            mydict = poly.attrib
+            mydict.update(image.attrib)
+            mylist.append(mydict)
+    df = pd.DataFrame(mylist)
+    df = df[(df.occluded=='0')]
+    df.rename(mapper={'points':'poly_json'}, inplace=True, axis='columns')
+    df['frame_id'] = df.id.apply(lambda x: f'{video_id}-{x}')
+    df = df[['frame_id', 'poly_json']]
+    df.to_sql('vcuts', engine, index=False, if_exists='append')
+
+
+# for development
+if __name__ == "__main__":
+    xml_file = sys.argv[1]
+    gps_csv = sys.argv[2]
+    video_file = sys.argv[3]
+    skip_no = 7
+    video_file = "20200625_125121.mp4"
+    write_into_objects = True
+    num_frames = 10
+    root = ET.parse(xml_file).getroot()
+    engine, connection = connect_to_db(os.getenv('CRB_SQL_USERNAME'), os.getenv('CRB_SQL_PASSWORD'))
+    add_frames(root, engine, video_file, gps_csv, skip_no, num_frames)
+    add_trees(root,engine, video_file)
+    add_vcuts(root, engine, video_file)
+    
+    # sample command
+    # python3 sql_dumper.py /home/savan/Downloads/cvat_annotation_20200703_124043_skip_7_numframes_10.xml \
+    #                     /home/savan/Downloads/20200703_124043_gps.csv \
+    #                     /home/savan/Downloads/20200703_124043.mp4      \                    
