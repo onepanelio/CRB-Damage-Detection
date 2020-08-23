@@ -46,12 +46,12 @@ You can install Onepanel SDK as follows: `pip3 install onepanel-sdk==0.12.0b2`.
 
 You can execute Onepanel workflows using Onepanel's Python SDK. You can find sample script `workflow_execution.py` which shows how to execute workflow. This requires `ONEPANEL_AUTHORIZATION` envrionment variable. You can also directly use string (line #8) but that isn't recommended if you will be sharing this script with others. You can set that environment variable by editing `.bashrc` file as follows.
 
-1 - `sudo ~/.bashrc`
-2 - Add following line in the end.
+1. `sudo nano ~/.bashrc`
+2. Add following line in the end.
     `export ONEPANEL_AUTHORIZATION=<onepanel-token-that-we-provided>`
-3 - Save and exit `.bashrc` file.
+3. Save and exit `.bashrc` file.
 
-Now that you have environment varibale set, you can go ahead and run the script. Feel free to modify script as you like. Currently, it takes video file and gps file path as an input. So you can run this script as follows.
+Now that you have environment variable set, you can go ahead and run the script. Feel free to modify script as you like. Currently, it takes video file and gps file path as an input. So you can run this script as follows.
 
 `python3 workflow_execution.py <path-to-video-on-s3> <path-to-gps-csv-file-on-s3>`
 
