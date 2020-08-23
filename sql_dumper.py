@@ -21,7 +21,7 @@ def dump_to_sql(xml_file, gps_csv, video_file, skip_no, write_into_objects, drop
     add_vcuts(root, engine, video_file)
 
 def connect_to_db(username, password):
-    engine = create_engine(f'mysql+pymysql://{username}:{password}@mysql.guaminsects.net/videosurvey')
+    engine = create_engine('mysql+pymysql://{}:{}@mysql.guaminsects.net/videosurvey'.format(username, password))
     connection = engine.connect()
     return engine, connection
 
@@ -37,7 +37,7 @@ def add_frames(root, engine, video_id, gps_csv, skip_no, num_frames):
     mylist = sorted(list(image_id_set))
     df = pd.DataFrame(mylist, columns=['frame'])
     df['video_id'] = video_id
-    df['frame_id'] = df.frame.apply(lambda x: f'{video_id}-{x}')
+    df['frame_id'] = df.frame.apply(lambda x: '{}-{}'.format(video_id, x))
     # df = df.merge(pd.read_csv(gps_csv))
     df_gps = pd.read_csv(gps_csv)
     df_gps = df_gps.iloc[0:skip_no*num_frames-skip_no+2:skip_no]
@@ -62,7 +62,7 @@ def add_trees(root, engine, video_id):
     df = df[(df.occluded=='0')]
     damagedict = {'zero':0, 'light':1, 'medium':2, 'high':3, 'non_recoverable':4}
     df['damage'] = df.label.apply(lambda x: damagedict[x])
-    df['frame_id'] = df.id.apply(lambda x: f'{video_id}-{x}')
+    df['frame_id'] = df.id.apply(lambda x: '{}-{}'.format(video_id, x))
     df.xbr = df.xbr.apply(lambda x: str2int(x))
     df.xtl = df.xtl.apply(lambda x: str2int(x))
     df.ybr = df.ybr.apply(lambda x: str2int(x))
@@ -85,7 +85,7 @@ def add_vcuts(root, engine, video_id):
     df = pd.DataFrame(mylist)
     df = df[(df.occluded=='0')]
     df.rename(mapper={'points':'poly_json'}, inplace=True, axis='columns')
-    df['frame_id'] = df.id.apply(lambda x: f'{video_id}-{x}')
+    df['frame_id'] = df.id.apply(lambda x: '{}-{}'.format(video_id, x))
     df = df[['frame_id', 'poly_json']]
     df.to_sql('vcuts', engine, index=False, if_exists='append')
 
