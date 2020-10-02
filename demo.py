@@ -206,11 +206,11 @@ def main(args):
             # get image ready for inference
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image_org = Image.fromarray(img)
+            image_mask_rcnn = np.array(image_org)
             width, height = image_org.size
             if width > 1920 or height > 1080:
-                image = image_org.resize((width // 2, height // 2), Image.ANTIALIAS)
-            image_np = np.array(image)
-            image_mask_rcnn = np.array(image_org)
+                image_org = image_org.resize((width // 2, height // 2), Image.ANTIALIAS)
+            image_np = np.array(image_org)
             image_np_expanded = np.expand_dims(image_np, axis=0)
            
             od_result = {}
