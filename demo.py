@@ -304,4 +304,4 @@ if __name__ == "__main__":
     output_xml_path, num_frames_ = main(args)
     print("Time took to run inference: {}".format(time.time() - start_time))
     if args.dump_sql == "true":
-        dump_to_sql(output_xml_path, "/mnt/data/datasets/gps.csv", os.path.basename(args.video), args.skip_no, args.write_into_objects, args.drop_extra_clm, num_frames_)
+        dump_to_sql(output_xml_path, "/mnt/data/datasets/gps.csv", os.path.basename(args.video), args.skip_no, args.write_into_objects, args.drop_extra_clm, int(num_frames_))
