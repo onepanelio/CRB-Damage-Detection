@@ -34,6 +34,10 @@ def add_frames(root, engine, video_id, gps_csv, skip_no, num_frames):
     image_id_set = set()
     for image in root.findall('image'):
         image_id_set.add(int(image.attrib['id']))
+    if not image_id_set:
+        # exit if no trees are detected
+        print("Exiting sql dumping since no objects were detected...")
+        sys.exit(0)
     mylist = sorted(list(image_id_set))
     df = pd.DataFrame(mylist, columns=['frame'])
     df['video_id'] = video_id
